@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#6d5dfc" />
+  <title>QuizLab — Психология обучения</title>
+  <style>
+    :root{
+      --bg:#f4f6ff;
+      --card:rgba(255,255,255,.88);
+      --text:#17182b;
+      --muted:#6f728f;
+      --primary:#6d5dfc;
+      --primary2:#8b7cff;
+      --success:#18a66a;
+      --danger:#e5484d;
+      --warning:#ffb224;
+      --line:#e6e8f3;
+      --shadow:0 24px 70px rgba(45,42,95,.14);
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
+    body{
+      background:
+        radial-gradient(circle at 10% 10%,rgba(139,124,255,.20),transparent 33%),
+        radial-gradient(circle at 90% 20%,rgba(64,207,174,.16),transparent 28%),
+        linear-gradient(160deg,#f8f9ff 0%,#eef1ff 100%);
+      padding:18px;
+    }
+    button{font:inherit}
+    .app{width:min(760px,100%);margin:0 auto}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:-.03em}
+    .logo{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--primary),#ac75ff);box-shadow:0 10px 24px rgba(109,93,252,.35)}
+    .pill{border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.62);backdrop-filter:blur(14px);padding:9px 12px;border-radius:999px;color:var(--muted);font-size:13px;font-weight:700}
+    .screen{display:none}
+    .screen.active{display:block;animation:fade .35s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .card{background:var(--card);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.85);box-shadow:var(--shadow);border-radius:var(--radius);padding:clamp(22px,5vw,42px)}
+    .hero-badge{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:#ece9ff;color:#5144c9;font-weight:800;font-size:13px}
+    h1{font-size:clamp(34px,7vw,56px);line-height:.98;margin:20px 0 16px;letter-spacing:-.055em}
+    h2{font-size:clamp(25px,5vw,36px);line-height:1.15;margin:10px 0 14px;letter-spacing:-.035em}
+    p{color:var(--muted);line-height:1.65}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}
+    .feature{background:#f8f8ff;border:1px solid var(--line);border-radius:18px;padding:15px}
+    .feature b{display:block;font-size:18px;margin-bottom:4px}
+    .feature span{color:var(--muted);font-size:12px}
+    .btn{width:100%;border:0;border-radius:17px;padding:16px 20px;font-weight:900;cursor:pointer;transition:.2s transform,.2s filter}
+    .btn:active{transform:scale(.98)}
+    .btn-primary{color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary2));box-shadow:0 14px 30px rgba(109,93,252,.28)}
+    .btn-secondary{background:#f0efff;color:#5548d4}
+    .quiz-head{display:grid;gap:12px;margin-bottom:20px}
+    .meta-row{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);font-size:13px;font-weight:800}
+    .progress{height:10px;background:#eceef7;border-radius:999px;overflow:hidden}
+    .progress > div{height:100%;width:0;background:linear-gradient(90deg,var(--primary),#a672ff);border-radius:999px;transition:width .35s ease}
+    .stats{display:flex;gap:8px;flex-wrap:wrap}
+    .stat{background:#f7f7fd;border:1px solid var(--line);border-radius:13px;padding:8px 11px;font-size:12px;font-weight:900}
+    .question-type{color:var(--primary);font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+    .answers{display:grid;gap:11px;margin:22px 0}
+    .answer{
+      width:100%;display:flex;align-items:center;gap:12px;text-align:left;
+      border:1.5px solid var(--line);background:#fff;border-radius:17px;padding:15px;
+      cursor:pointer;transition:.18s ease;color:var(--text);font-weight:750;
+    }
+    .answer:hover{border-color:#b9b1ff;transform:translateY(-1px)}
+    .answer .letter{flex:0 0 34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#f1f2f8;color:#686b84;font-size:13px;font-weight:900}
+    .answer.selected{border-color:var(--primary);background:#f5f3ff}
+    .answer.correct{border-color:var(--success);background:#eafaf3}
+    .answer.correct .letter{background:var(--success);color:#fff}
+    .answer.wrong{border-color:var(--danger);background:#fff0f1}
+    .answer.wrong .letter{background:var(--danger);color:#fff}
+    .answer.disabled{pointer-events:none}
+    .feedback{display:none;border-radius:18px;padding:16px 18px;margin:4px 0 18px;line-height:1.55}
+    .feedback.show{display:block;animation:fade .25s ease}
+    .feedback.good{background:#eafaf3;border:1px solid #bdebd4}
+    .feedback.bad{background:#fff1f1;border:1px solid #f3c4c6}
+    .feedback b{display:block;margin-bottom:4px}
+    .action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .hidden{display:none!important}
+    .timer-wrap{display:flex;align-items:center;gap:8px}
+    .timer.low{color:var(--danger)}
+    .score-ring{
+      width:170px;height:170px;border-radius:50%;margin:18px auto;
+      display:grid;place-items:center;background:conic-gradient(var(--primary) 0deg,#ebeaf5 0deg);
+      position:relative;
+    }
+    .score-ring::before{content:"";position:absolute;inset:15px;background:#fff;border-radius:50%}
+    .score-ring-inner{position:relative;text-align:center}
+    .score-ring strong{display:block;font-size:42px;letter-spacing:-.05em}
+    .result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0}
+    .result-box{text-align:center;padding:16px 10px;background:#f7f7fd;border:1px solid var(--line);border-radius:18px}
+    .result-box strong{display:block;font-size:23px}
+    .result-box span{font-size:12px;color:var(--muted)}
+    .review{margin-top:22px;display:grid;gap:10px}
+    .review-item{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+    .review-item.ok{border-left:5px solid var(--success)}
+    .review-item.no{border-left:5px solid var(--danger)}
+    .review-item b{display:block;margin-bottom:6px}
+    .review-item small{color:var(--muted);line-height:1.45}
+    .footer{text-align:center;color:#9194aa;font-size:12px;padding:18px}
+    @media(max-width:560px){
+      body{padding:10px}
+      .feature-grid,.result-grid{grid-template-columns:1fr 1fr}
+      .feature-grid .feature:last-child{grid-column:1/-1}
+      .action-row{grid-template-columns:1fr}
+      .card{border-radius:21px}
+      .topbar{padding:4px 3px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><div class="logo">Q</div><span>QuizLab</span></div>
+    <div class="pill">Демо для GitHub Pages</div>
+  </div>
+
+  <section id="startScreen" class="screen active">
+    <div class="card">
+      <span class="hero-badge">🧠 Интерактивный квиз</span>
+      <h1>Психология обучения</h1>
+      <p>Демонстрационный квиз для подготовки к магистратуре. Вопросы показываются по одному, ответы перемешиваются, а после выбора появляется объяснение.</p>
+      <div class="feature-grid">
+        <div class="feature"><b>10</b><span>вопросов</span></div>
+        <div class="feature"><b>20 сек</b><span>на каждый вопрос</span></div>
+        <div class="feature"><b>+100</b><span>очков за ответ</span></div>
+      </div>
+      <button class="btn btn-primary" id="startBtn">Начать квиз</button>
+    </div>
+  </section>
+
+  <section id="quizScreen" class="screen">
+    <div class="card">
+      <div class="quiz-head">
+        <div class="meta-row">
+          <span id="questionCounter">Вопрос 1 из 10</span>
+          <div class="timer-wrap"><span>⏱</span><span id="timer">20</span> сек</div>
+        </div>
+        <div class="progress"><div id="progressBar"></div></div>
+        <div class="stats">
+          <div class="stat">⭐ Очки: <span id="score">0</span></div>
+          <div class="stat">🔥 Серия: <span id="streak">0</span></div>
+          <div class="stat">✅ Верно: <span id="correctCount">0</span></div>
+        </div>
+      </div>
+
+      <div class="question-type" id="questionType">Один правильный ответ</div>
+      <h2 id="questionText"></h2>
+      <div id="answers" class="answers"></div>
+
+      <div id="feedback" class="feedback"></div>
+
+      <div class="action-row">
+        <button id="hintBtn" class="btn btn-secondary">💡 Убрать 2 варианта</button>
+        <button id="nextBtn" class="btn btn-primary hidden">Следующий вопрос →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="resultScreen" class="screen">
+    <div class="card" style="text-align:center">
+      <span class="hero-badge">🏆 Квиз завершён</span>
+      <h2 id="resultTitle">Отличный результат!</h2>
+      <div class="score-ring" id="scoreRing">
+        <div class="score-ring-inner">
+          <strong id="percent">0%</strong>
+          <span style="color:var(--muted);font-size:12px">точность</span>
+        </div>
+      </div>
+      <p id="resultMessage"></p>
+      <div class="result-grid">
+        <div class="result-box"><strong id="finalScore">0</strong><span>очков</span></div>
+        <div class="result-box"><strong id="finalCorrect">0/10</strong><span>верных</span></div>
+        <div class="result-box"><strong id="bestStreak">0</strong><span>лучшая серия</span></div>
+      </div>
+      <button class="btn btn-primary" id="restartBtn">Пройти ещё раз</button>
+      <div class="review" id="review"></div>
+    </div>
+  </section>
+
+  <div class="footer">Один файл index.html · работает на телефоне, iPad и GitHub Pages</div>
+</div>
+
+<script>
+const questions = [
+  {
+    q:"Как называется временная поддержка ученика, которая постепенно уменьшается по мере роста его самостоятельности?",
+    options:["Скаффолдинг","Интерференция","Рефлексия","Габитуация"],
+    correct:"Скаффолдинг",
+    explanation:"Скаффолдинг — это пошаговая поддержка со стороны учителя. По мере освоения навыка подсказки и помощь постепенно убираются."
+  },
+  {
+    q:"Что лучше всего описывает формирующее оценивание?",
+    options:["Оценивание для улучшения обучения в процессе","Итоговая отметка в конце курса","Сравнение учеников между собой","Проверка только теоретических знаний"],
+    correct:"Оценивание для улучшения обучения в процессе",
+    explanation:"Формирующее оценивание даёт обратную связь во время обучения и помогает ученику понять, что уже получается и что нужно улучшить."
+  },
+  {
+    q:"Какой вид мотивации возникает, когда человек учится из интереса к самой деятельности?",
+    options:["Внутренняя мотивация","Внешняя мотивация","Негативное подкрепление","Социальное сравнение"],
+    correct:"Внутренняя мотивация",
+    explanation:"Внутренняя мотивация связана с интересом, удовольствием и личной ценностью самой деятельности, а не с наградой или наказанием."
+  },
+  {
+    q:"Какой принцип помогает лучше запомнить материал на длительный срок?",
+    options:["Распределённое повторение","Однократное перечитывание","Заучивание всей темы за один вечер","Копирование текста без пауз"],
+    correct:"Распределённое повторение",
+    explanation:"Распределённое повторение предполагает возвращение к материалу через увеличивающиеся интервалы, что укрепляет долговременную память."
+  },
+  {
+    q:"Что такое метакогниция?",
+    options:["Осознание и управление собственным мышлением","Механическое запоминание фактов","Эмоциональная реакция на отметку","Способность быстро читать"],
+    correct:"Осознание и управление собственным мышлением",
+    explanation:"Метакогниция — это умение понимать, как ты думаешь и учишься, планировать стратегию, контролировать понимание и оценивать результат."
+  },
+  {
+    q:"Какой пример относится к активному воспроизведению?",
+    options:["Ответить на вопросы без подсказки","Ещё раз перечитать конспект","Подчеркнуть важные слова","Посмотреть готовое решение"],
+    correct:"Ответить на вопросы без подсказки",
+    explanation:"Активное воспроизведение требует извлечь информацию из памяти. Именно попытка вспомнить усиливает запоминание."
+  },
+  {
+    q:"Что, согласно теории когнитивной нагрузки, может мешать обучению?",
+    options:["Избыточные и не относящиеся к задаче элементы","Чёткая структура материала","Короткие смысловые блоки","Постепенное усложнение заданий"],
+    correct:"Избыточные и не относящиеся к задаче элементы",
+    explanation:"Лишние детали перегружают рабочую память. Поэтому учебный материал лучше делать ясным, структурированным и без ненужного визуального шума."
+  },
+  {
+    q:"Как называется убеждение, что способности можно развивать усилиями и стратегиями?",
+    options:["Установка на рост","Фиксированная установка","Эффект ореола","Конформность"],
+    correct:"Установка на рост",
+    explanation:"Установка на рост означает веру в то, что интеллект и навыки могут развиваться через практику, обратную связь и эффективные стратегии."
+  },
+  {
+    q:"Какая обратная связь наиболее полезна для обучения?",
+    options:["Конкретная и указывающая следующий шаг","Только общая похвала","Только сообщение итоговой отметки","Сравнение с самым сильным учеником"],
+    correct:"Конкретная и указывающая следующий шаг",
+    explanation:"Эффективная обратная связь показывает, что выполнено хорошо, где ошибка и какое конкретное действие поможет продвинуться дальше."
+  },
+  {
+    q:"Что означает перенос обучения?",
+    options:["Применение знания в новой ситуации","Повторение одного и того же задания","Запоминание определения дословно","Снижение сложности упражнения"],
+    correct:"Применение знания в новой ситуации",
+    explanation:"Перенос обучения происходит, когда человек использует ранее освоенное знание или навык в другом контексте или для новой задачи."
+  }
+];
+
+let quiz = [];
+let current = 0;
+let score = 0;
+let correct = 0;
+let streak = 0;
+let maxStreak = 0;
+let timer = 20;
+let interval;
+let answered = false;
+let results = [];
+let hintUsed = false;
+
+const $ = id => document.getElementById(id);
+const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+function startQuiz(){
+  quiz = shuffle(questions).map(item => ({...item, options:shuffle(item.options)}));
+  current=0; score=0; correct=0; streak=0; maxStreak=0; results=[];
+  $("score").textContent=0;
+  $("streak").textContent=0;
+  $("correctCount").textContent=0;
+  showScreen("quizScreen");
+  renderQuestion();
+}
+
+function renderQuestion(){
+  answered=false;
+  hintUsed=false;
+  clearInterval(interval);
+  timer=20;
+  $("timer").textContent=timer;
+  $("timer").parentElement.classList.remove("low");
+  $("nextBtn").classList.add("hidden");
+  $("hintBtn").classList.remove("hidden");
+  $("hintBtn").disabled=false;
+  $("feedback").className="feedback";
+  $("feedback").innerHTML="";
+  const item=quiz[current];
+  $("questionCounter").textContent=`Вопрос ${current+1} из ${quiz.length}`;
+  $("progressBar").style.width=`${(current/quiz.length)*100}%`;
+  $("questionText").textContent=item.q;
+  $("answers").innerHTML="";
+  item.options.forEach((option,i)=>{
+    const btn=document.createElement("button");
+    btn.className="answer";
+    btn.dataset.value=option;
+    btn.innerHTML=`<span class="letter">${String.fromCharCode(65+i)}</span><span>${option}</span>`;
+    btn.onclick=()=>selectAnswer(option,btn);
+    $("answers").appendChild(btn);
+  });
+  interval=setInterval(()=>{
+    timer--;
+    $("timer").textContent=timer;
+    if(timer<=5) $("timer").parentElement.classList.add("low");
+    if(timer<=0){
+      clearInterval(interval);
+      selectAnswer(null,null,true);
+    }
+  },1000);
+}
+
+function selectAnswer(value,button,timedOut=false){
+  if(answered) return;
+  answered=true;
+  clearInterval(interval);
+  const item=quiz[current];
+  const isCorrect=value===item.correct;
+  document.querySelectorAll(".answer").forEach(btn=>{
+    btn.classList.add("disabled");
+    if(btn.dataset.value===item.correct) btn.classList.add("correct");
+  });
+  if(button && !isCorrect) button.classList.add("wrong");
+  if(isCorrect){
+    const timeBonus=timer*3;
+    const streakBonus=streak*10;
+    score+=100+timeBonus+streakBonus;
+    correct++;
+    streak++;
+    maxStreak=Math.max(maxStreak,streak);
+  }else{
+    streak=0;
+  }
+  results.push({q:item.q, chosen:value, correct:item.correct, ok:isCorrect});
+  $("score").textContent=score;
+  $("streak").textContent=streak;
+  $("correctCount").textContent=correct;
+
+  const fb=$("feedback");
+  fb.className=`feedback show ${isCorrect?"good":"bad"}`;
+  fb.innerHTML=`<b>${isCorrect?"Верно! 🎉":timedOut?"Время вышло ⏰":"Неверно"}</b>${item.explanation}`;
+  $("hintBtn").classList.add("hidden");
+  $("nextBtn").classList.remove("hidden");
+  $("nextBtn").textContent=current===quiz.length-1?"Показать результат":"Следующий вопрос →";
+}
+
+function useHint(){
+  if(answered || hintUsed) return;
+  hintUsed=true;
+  const item=quiz[current];
+  const wrong=[...document.querySelectorAll(".answer")].filter(b=>b.dataset.value!==item.correct);
+  shuffle(wrong).slice(0,2).forEach(b=>{
+    b.style.opacity=".28";
+    b.style.pointerEvents="none";
+  });
+  $("hintBtn").disabled=true;
+  $("hintBtn").textContent="Подсказка использована";
+}
+
+function nextQuestion(){
+  if(!answered) return;
+  current++;
+  if(current<quiz.length) renderQuestion();
+  else showResults();
+}
+
+function showResults(){
+  clearInterval(interval);
+  showScreen("resultScreen");
+  $("progressBar").style.width="100%";
+  const pct=Math.round(correct/quiz.length*100);
+  $("percent").textContent=pct+"%";
+  $("scoreRing").style.background=`conic-gradient(var(--primary) ${pct*3.6}deg,#ebeaf5 0deg)`;
+  $("finalScore").textContent=score;
+  $("finalCorrect").textContent=`${correct}/${quiz.length}`;
+  $("bestStreak").textContent=maxStreak;
+
+  let title,message;
+  if(pct>=90){title="Превосходно!";message="Ты уверенно владеешь темой и почти не допускаешь ошибок."}
+  else if(pct>=70){title="Очень хороший результат!";message="База сильная. Просмотри объяснения к ошибкам и попробуй ещё раз."}
+  else if(pct>=50){title="Хорошее начало";message="Основные идеи понятны, но несколько тем стоит повторить."}
+  else {title="Есть куда расти";message="Изучи объяснения ниже и пройди квиз повторно — результат станет заметно лучше."}
+  $("resultTitle").textContent=title;
+  $("resultMessage").textContent=message;
+
+  $("review").innerHTML="<h3 style='text-align:left;margin-bottom:0'>Разбор ответов</h3>";
+  results.forEach((r,i)=>{
+    const div=document.createElement("div");
+    div.className=`review-item ${r.ok?"ok":"no"}`;
+    div.style.textAlign="left";
+    div.innerHTML=`<b>${i+1}. ${r.q}</b><small>${r.ok?"Ответ верный":`Твой ответ: ${r.chosen??"нет ответа"}<br>Правильный ответ: ${r.correct}`}</small>`;
+    $("review").appendChild(div);
+  });
+}
+
+$("startBtn").onclick=startQuiz;
+$("restartBtn").onclick=startQuiz;
+$("nextBtn").onclick=nextQuestion;
+$("hintBtn").onclick=useHint;
+</script>
+</body>
+</html>
